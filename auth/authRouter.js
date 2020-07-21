@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 
-const Users = require('../data/dbConfig');
+const Users = require('./authModel');
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ router.post('/register/', (req, res) => {
     credentials.password = hash;
 
     if ( credentials.username && credentials.password ) {
-        Users('users').insert(credentials)
+        Users.add(credentials)
             .then(response => {
                 res.status(200).json({ message: 'Successfully created account!' });
             })
@@ -19,9 +19,24 @@ router.post('/register/', (req, res) => {
                 res.status(500).json({ message: 'Error when adding account to database.' });
             })
     } else {
-        
+        res.status(400).json({ message: 'Make sure username and password are filled in.' });
     }
+});
 
+router.post('/login/', (req, res) => {
+    const { username, password } = req.body;
+
+    Users.findBy({ username })
+        .then(user => {
+            if ( user &&  bcrypt.compareSync(password, user.password)) {
+                res.status(200).json({ message: `Loggen In, Welcome ${username}!` });
+            } else {
+                res.status(401).json({ message: 'Invalid credentials.' });
+            }
+        })
+        .catch(err => {
+            res.status(500).json({ message: err });
+        })
 })
 
 module.exports = router;
