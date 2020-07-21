@@ -29,7 +29,10 @@ router.post('/login/', (req, res) => {
     Users.findBy({ username })
         .then(user => {
             if ( user &&  bcrypt.compareSync(password, user.password)) {
-                res.status(200).json({ message: `Loggen In, Welcome ${username}!` });
+                req.session.loggedIn = true;
+                req.session.username = user.username;
+
+                res.status(200).json({ message: `Loggen In, Welcome ${username}!`, session: req.session });
             } else {
                 res.status(401).json({ message: 'Invalid credentials.' });
             }
@@ -37,6 +40,8 @@ router.post('/login/', (req, res) => {
         .catch(err => {
             res.status(500).json({ message: err });
         })
-})
+});
+
+
 
 module.exports = router;
